@@ -51,20 +51,35 @@ const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
 const KEY = "5f14cc88";
-const apiUrl = `http://www.omdbapi.com/?apikey=${KEY}&`;
-const queryParam = `s=interstellar`;
+const apiUrl = `http://www.omdbapi.com/?apikey=${KEY}`;
+const queryParam1 = `interstellar`;
+const queryParam2 = `2014`;
 
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
 
   // we use the useEffect hook to register an effect, which code that contains side effects (code which has connection with external from the component will lead infinite renders)
-  // This code execute when after this component mount
-  // Dependency array ensures that this effect will execute when the component first mount
+  // Side effects should not be in render logic, only inside eventHandles or in useEffects
+  // Events triggered by events and useEffects triggered by rendering
+  // This code execute when after this component mount (depends on dependancy array)
+  // The exact moment at whitch the effect is executed actually depends on its Dependency array
+
+  // Handled by Promise
+  // useEffect(function () {
+  //   fetch(`${apiUrl}${queryParam1}&${queryParam2}`)
+  //     .then((res) => res.json())
+  //     .then((data) => setMovies(data.Search));
+  // }, []);
+
+  // Handled by Async function
   useEffect(function () {
-    fetch(`${apiUrl}${queryParam}`)
-      .then((res) => res.json())
-      .then((data) => setMovies(data.Search));
+    async function fetchMovies() {
+      const res = await fetch(`${apiUrl}&s=${queryParam1}&y=${queryParam2}`);
+      const data = await res.json();
+      setMovies(data.Search);
+    }
+    fetchMovies();
   }, []);
 
   return (
