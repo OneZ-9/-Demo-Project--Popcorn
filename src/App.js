@@ -58,6 +58,7 @@ const queryParam2 = `2014`;
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // we use the useEffect hook to register an effect, which code that contains side effects (code which has connection with external from the component will lead infinite renders)
   // Side effects should not be in render logic, only inside eventHandles or in useEffects
@@ -75,9 +76,11 @@ export default function App() {
   // Handled by Async function
   useEffect(function () {
     async function fetchMovies() {
+      setIsLoading(true);
       const res = await fetch(`${apiUrl}&s=${queryParam1}&y=${queryParam2}`);
       const data = await res.json();
       setMovies(data.Search);
+      setIsLoading(false);
     }
     fetchMovies();
   }, []);
@@ -90,9 +93,7 @@ export default function App() {
       </NavBar>
 
       <Main>
-        <Box>
-          <MovieList movies={movies} />
-        </Box>
+        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
 
         <Box>
           <WatchedSummary watched={watched} />
@@ -101,6 +102,10 @@ export default function App() {
       </Main>
     </>
   );
+}
+
+function Loader() {
+  return <p className="loader">Loading...</p>;
 }
 
 function NavBar({ children }) {
