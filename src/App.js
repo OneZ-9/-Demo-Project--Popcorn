@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import StarRating from "./StarRating";
 
 const tempMovieData = [
   {
@@ -61,6 +62,16 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [selectetMovieId, setSelectedMovieId] = useState(null);
+
+  function handleSelectMovie(id) {
+    // id === selectetMovieId ? setSelectedMovieId(null) : setSelectedMovieId(id);
+    setSelectedMovieId((selectedId) => (selectedId === id ? null : id));
+  }
+
+  function handleCloseMovie() {
+    setSelectedMovieId(null);
+  }
 
   // we use the useEffect hook to register an effect, which code that contains side effects (code which has connection with external from the component will lead infinite renders)
   // Side effects should not be in render logic, only inside eventHandles or in useEffects
@@ -110,11 +121,12 @@ export default function App() {
           if (data.Response === "False") throw new Error("Movie not found");
 
           setMovies(data.Search);
+
           // console.log(movies); stale state
           // console.log(data);   invalid search query => Response: "False"
           // setIsLoading(false);
         } catch (err) {
-          console.error(err.message);
+          // console.error(err.message);
           setError(err.message);
         } finally {
           setIsLoading(false);
@@ -145,12 +157,23 @@ export default function App() {
 
           {isLoading && <Loader />}
           {error && <ErrorMessage message={error} />}
-          {!isLoading && !error && <MovieList movies={movies} />}
+          {!isLoading && !error && (
+            <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
+          )}
         </Box>
 
         <Box>
-          <WatchedSummary watched={watched} />
-          <WatchedMovieList watched={watched} />
+          {selectetMovieId ? (
+            <SelectedMovieDetails
+              selectetMovieId={selectetMovieId}
+              onCloseMovie={handleCloseMovie}
+            />
+          ) : (
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedMovieList watched={watched} />
+            </>
+          )}
         </Box>
       </Main>
     </>
@@ -241,19 +264,19 @@ function Box({ children }) {
 //   );
 // }
 
-function MovieList({ movies }) {
+function MovieList({ movies, onSelectMovie }) {
   return (
-    <ul className="list">
+    <ul className="list list-movies">
       {movies?.map((movie) => (
-        <Movie movie={movie} key={movie.imdbID} />
+        <Movie movie={movie} key={movie.imdbID} onSelectMovie={onSelectMovie} />
       ))}
     </ul>
   );
 }
 
-function Movie({ movie }) {
+function Movie({ movie, onSelectMovie }) {
   return (
-    <li>
+    <li onClick={() => onSelectMovie(movie.imdbID)}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
@@ -263,6 +286,74 @@ function Movie({ movie }) {
         </p>
       </div>
     </li>
+  );
+}
+
+function SelectedMovieDetails({ selectetMovieId, onCloseMovie }) {
+  const [detailedMovie, setDetailedMovie] = useState({});
+
+  // destructuring the detailedMovie object which we set
+  const {
+    Title: title,
+    Year: year,
+    Poster: poster,
+    Runtime: runtime,
+    imdbRating,
+    Plot: plot,
+    Released: released,
+    Actors: actors,
+    Director: director,
+    Genre: genre,
+  } = detailedMovie;
+
+  console.log(title, year);
+
+  useEffect(
+    function () {
+      async function getMovieDetails() {
+        const res = await fetch(`${apiUrl}&i=${selectetMovieId}`);
+
+        const data = await res.json();
+        setDetailedMovie(data);
+      }
+      getMovieDetails();
+    },
+    [detailedMovie]
+  );
+
+  return (
+    <div className="details">
+      <header>
+        <button className="btn-back" onClick={onCloseMovie}>
+          &larr;
+        </button>
+        <img src={poster} alt={`Poster of ${detailedMovie}`} />
+
+        <div className="details-overveiw">
+          <h2>{title}</h2>
+          <p>
+            {released} &bull; {runtime}
+          </p>
+          <p>{genre}</p>
+          <p>
+            <span>⭐</span>
+            {imdbRating} IMDb rating
+          </p>
+        </div>
+      </header>
+
+      <section>
+        <div className="rating">
+          <StarRating maxRating={10} size={24} />
+        </div>
+
+        <p>
+          <em>{plot}</em>
+        </p>
+        <p>Starring {actors}</p>
+        <p>Directed by {director}</p>
+      </section>
+    </div>
   );
 }
 
