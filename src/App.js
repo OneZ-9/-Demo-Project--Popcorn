@@ -52,19 +52,40 @@ const average = (arr) =>
 
 const KEY = "5f14cc88";
 const apiUrl = `http://www.omdbapi.com/?apikey=${KEY}`;
-const queryParam1 = `sdasfasf`;
-const queryParam2 = `2014`;
+//  const queryParam1 = "";
+// const queryParam2 = `2014`;
 
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+
   // we use the useEffect hook to register an effect, which code that contains side effects (code which has connection with external from the component will lead infinite renders)
   // Side effects should not be in render logic, only inside eventHandles or in useEffects
   // Events triggered by events and useEffects triggered by rendering
   // This code execute when after this component mount (depends on dependancy array)
   // The exact moment at whitch the effect is executed actually depends on its Dependency array
+
+  /* 
+  useEffect(function () {
+    console.log("After initial render");
+  }, []);
+
+  useEffect(function () {
+    console.log("After every render");
+  });
+
+  useEffect(
+    function () {
+      console.log("After query state changed");
+    },
+    [query]
+  );
+
+  console.log("During render");
+*/
 
   // Handled by Promise
   // useEffect(function () {
@@ -74,34 +95,47 @@ export default function App() {
   // }, []);
 
   // Handled by Async function
-  useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(`${apiUrl}&s=${queryParam1}&y=${queryParam2}`);
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+          setError("");
 
-        if (!res.ok) throw new Error("Something went wrong");
+          const res = await fetch(`${apiUrl}&s=${query}`);
 
-        const data = await res.json();
-        if (data.Response === "False") throw new Error("Movie not found");
+          if (!res.ok) throw new Error("Something went wrong");
 
-        setMovies(data.Search);
-        // console.log(data);
-        // setIsLoading(false);
-      } catch (err) {
-        console.log(err.message);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+          const data = await res.json();
+          if (data.Response === "False") throw new Error("Movie not found");
+
+          setMovies(data.Search);
+          // console.log(movies); stale state
+          // console.log(data);   invalid search query => Response: "False"
+          // setIsLoading(false);
+        } catch (err) {
+          console.error(err.message);
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    }
-    fetchMovies();
-  }, []);
+
+      if (query.length < 3) {
+        setMovies([]);
+        setError("");
+        return;
+      }
+
+      fetchMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <NavBar>
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResults movies={movies} />
       </NavBar>
 
@@ -110,8 +144,8 @@ export default function App() {
           {/* {isLoading ? <Loader /> : <MovieList movies={movies} />} */}
 
           {isLoading && <Loader />}
-          {!isLoading && !error && <MovieList movies={movies} />}
           {error && <ErrorMessage message={error} />}
+          {!isLoading && !error && <MovieList movies={movies} />}
         </Box>
 
         <Box>
@@ -153,9 +187,7 @@ function Logo() {
   );
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
-
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
