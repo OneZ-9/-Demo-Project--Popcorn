@@ -58,6 +58,10 @@ body {
   position: relative;
 }
 
+.box:hover {
+  overflow: auto;
+}
+
 .loader {
   text-align: center;
   text-transform: uppercase;
