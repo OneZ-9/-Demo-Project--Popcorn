@@ -61,11 +61,21 @@ const apiUrl = `http://www.omdbapi.com/?apikey=${KEY}`;
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [selectetMovieId, setSelectedMovieId] = useState(null);
+
+  // const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(function () {
+    const storedValue = localStorage.getItem("watchedMovies");
+    return JSON.parse(storedValue);
+    // This function cannot recieve any arguments should be a pure function
+    // When the initial render, React will set the state with return value of this function
+    // This function only executed once on initial render and will ingored in subsequent re-renders
+    // We shouldnt call a function in useState and then it will call in every render, instead we should pass a function that React can call later
+    // We have to use JSON.parse since data stored as strings
+  });
 
   // console.log(isAlreadyExists);
   // console.log(watched);
@@ -81,6 +91,10 @@ export default function App() {
 
   function handleAddWatched(movie) {
     setWatched((watchedMovies) => [...watchedMovies, movie]);
+
+    // Store data as string key value pair in local browser storage.
+    // use spread watched array to avoid stale state.Keep updated with existing watched movies list
+    // localStorage.setItem("watchedMovies", JSON.stringify([...watched, movie]));
   }
 
   function handleDeleteWatched(id) {
@@ -88,6 +102,15 @@ export default function App() {
       watchedMovies.filter((movie) => movie.imdbID !== id)
     );
   }
+
+  useEffect(
+    function () {
+      localStorage.setItem("watchedMovies", JSON.stringify(watched));
+      // We dont need to create new array as in eventHandler function because useEffect will execute once the watched state updated
+      // Using useEffect also synchronized with watch state and it will automatically update stored values when watched state updates.
+    },
+    [watched]
+  );
 
   // we use the useEffect hook to register an effect, which code that contains side effects (code which has connection with external from the component will lead infinite renders)
   // Side effects should not be in render logic, only inside eventHandles or in useEffects
@@ -373,6 +396,11 @@ function SelectedMovieDetails({
     onAddWatchedMovie(newWatchedMovie);
     onCloseMovie();
   }
+
+  // We have to avoid conditional hooks and early returns can affect to the order of linked list of hooks
+  // if (imdbRating > 8) [isTop, setIsTop] = useState(true);
+
+  // if (imdbRating > 8) return <p>Greatest ever!</p>
 
   useEffect(
     function () {
