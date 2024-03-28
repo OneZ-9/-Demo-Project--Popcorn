@@ -124,12 +124,17 @@ export default function App() {
   // Handled by Async function
   useEffect(
     function () {
+      // Browser API
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setIsLoading(true);
           setError("");
 
-          const res = await fetch(`${apiUrl}&s=${query}`);
+          const res = await fetch(`${apiUrl}&s=${query}`, {
+            signal: controller.signal,
+          });
 
           if (!res.ok) throw new Error("Something went wrong");
 
@@ -137,13 +142,16 @@ export default function App() {
           if (data.Response === "False") throw new Error("Movie not found");
 
           setMovies(data.Search);
+          setError("");
 
           // console.log(movies); stale state
           // console.log(data);   invalid search query => Response: "False"
           // setIsLoading(false);
         } catch (err) {
           // console.error(err.message);
-          setError(err.message);
+          if (err.name !== "AbortError") {
+            setError(err.message);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -156,6 +164,11 @@ export default function App() {
       }
 
       fetchMovies();
+
+      // will execute for each key stroke, with each rerender, abort the request
+      return function () {
+        controller.abort();
+      };
     },
     [query]
   );
@@ -374,6 +387,18 @@ function SelectedMovieDetails({
       getMovieDetails();
     },
     [selectetMovieId]
+  );
+
+  useEffect(
+    function () {
+      if (!title) return;
+      document.title = `Movie | ${title}`;
+
+      return function () {
+        document.title = "Popcorn";
+      };
+    },
+    [title]
   );
 
   return (
