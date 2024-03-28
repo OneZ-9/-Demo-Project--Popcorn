@@ -162,6 +162,7 @@ export default function App() {
         return;
       }
 
+      handleCloseMovie(); // To close if any open movie before search
       fetchMovies();
 
       // will execute for each key stroke, with each rerender, abort the request
