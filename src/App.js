@@ -135,7 +135,6 @@ export default function App() {
           const res = await fetch(`${apiUrl}&s=${query}`, {
             signal: controller.signal,
           });
-
           if (!res.ok) throw new Error("Something went wrong");
 
           const data = await res.json();
@@ -389,6 +388,26 @@ function SelectedMovieDetails({
     [selectetMovieId]
   );
 
+  // Handle global keypress
+  useEffect(
+    function () {
+      // eventListner callback function
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+          console.log("Escape");
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
+
   useEffect(
     function () {
       if (!title) return;
@@ -396,6 +415,7 @@ function SelectedMovieDetails({
 
       return function () {
         document.title = "Popcorn";
+        console.log(`Clean up movie ${title}`);
       };
     },
     [title]
