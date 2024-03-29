@@ -16,6 +16,7 @@ export function useLocalStorageState(initialState, key) {
   useEffect(
     function () {
       localStorage.setItem(key, JSON.stringify(value));
+
       // We dont need to create new array as in eventHandler function because useEffect will execute once the watched state updated
       // Using useEffect also synchronized with watch state and it will automatically update stored values when watched state updates.
     },

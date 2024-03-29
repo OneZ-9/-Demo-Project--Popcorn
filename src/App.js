@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 import { useMoviesFetch } from "./useMoviesFetch";
 import { useLocalStorageState } from "./useLocalStorageState";
+import { useKey } from "./useKey";
 
 /*
 const tempMovieData = [
@@ -65,14 +66,13 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [selectetMovieId, setSelectedMovieId] = useState(null);
   // const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useLocalStorageState([], "watchedMovies");
 
   const { movies, isLoading, error } = useMoviesFetch(
     apiUrl,
     query,
     handleCloseMovie
   );
-
-  const [watched, setWatched] = useLocalStorageState([], "watchedMovies");
 
   function handleSelectMovie(id) {
     // id === selectetMovieId ? setSelectedMovieId(null) : setSelectedMovieId(id);
@@ -203,25 +203,33 @@ function Logo() {
 function Search({ query, setQuery }) {
   const inputEl = useRef(null);
 
-  useEffect(
-    function () {
-      function callback(e) {
-        if (document.activeElement === inputEl.current) return;
+  useKey("Enter", function () {
+    if (document.activeElement === inputEl.current) return;
 
-        if (e.code === "Enter") {
-          inputEl.current.focus();
-          // console.log(inputEl.current);
-          setQuery("");
-        }
-      }
-      document.addEventListener("keydown", callback);
+    inputEl.current.focus();
+    // console.log(inputEl.current);
+    setQuery("");
+  });
 
-      return () => {
-        document.removeEventListener("keydown", callback);
-      };
-    },
-    [setQuery]
-  );
+  // useEffect(
+  //   function () {
+  //     function callback(e) {
+  //       if (e.code === "Enter") {
+  //         if (document.activeElement === inputEl.current) return;
+
+  //         inputEl.current.focus();
+  //         // console.log(inputEl.current);
+  //         setQuery("");
+  //       }
+  //     }
+  //     document.addEventListener("keydown", callback);
+
+  //     return () => {
+  //       document.removeEventListener("keydown", callback);
+  //     };
+  //   },
+  //   [setQuery]
+  // );
 
   // How we do not select DOM elements in React
   // useEffect(function () {
@@ -392,25 +400,27 @@ function SelectedMovieDetails({
     [selectetMovieId]
   );
 
+  useKey("Escape", onCloseMovie);
+
   // Handle global keypress
-  useEffect(
-    function () {
-      // eventListner callback function
-      function callback(e) {
-        if (e.code === "Escape") {
-          onCloseMovie();
-          // console.log("Escape");
-        }
-      }
+  // useEffect(
+  //   function () {
+  //     // eventListner callback function
+  //     function callback(e) {
+  //       if (e.code === "Escape") {
+  //         onCloseMovie();
+  //         // console.log("Escape");
+  //       }
+  //     }
 
-      document.addEventListener("keydown", callback);
+  //     document.addEventListener("keydown", callback);
 
-      return function () {
-        document.removeEventListener("keydown", callback);
-      };
-    },
-    [onCloseMovie]
-  );
+  //     return function () {
+  //       document.removeEventListener("keydown", callback);
+  //     };
+  //   },
+  //   [onCloseMovie]
+  // );
 
   useEffect(
     function () {
