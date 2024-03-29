@@ -386,6 +386,17 @@ function SelectedMovieDetails({
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState("");
 
+  const countRef = useRef(0);
+
+  // We use useEffect due to we are not allowed to mutate ref in render logic
+  // ref is like a box can hold any value
+  useEffect(
+    function () {
+      if (userRating) countRef.current += 1;
+    },
+    [userRating]
+  );
+
   const isAlreadyWatched = watched.find(
     (movie) => movie.imdbID === selectetMovieId
   );
@@ -421,6 +432,7 @@ function SelectedMovieDetails({
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(" ").at(0)),
       userRating,
+      countRatingDecisions: countRef.current,
     };
 
     onAddWatchedMovie(newWatchedMovie);
