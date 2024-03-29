@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 import { useMoviesFetch } from "./useMoviesFetch";
+import { useLocalStorageState } from "./useLocalStorageState";
 
 /*
 const tempMovieData = [
@@ -64,21 +65,14 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [selectetMovieId, setSelectedMovieId] = useState(null);
   // const [watched, setWatched] = useState([]);
-  const [watched, setWatched] = useState(function () {
-    const storedValue = localStorage.getItem("watchedMovies");
-    return JSON.parse(storedValue);
-    // This function cannot recieve any arguments should be a pure function
-    // When the initial render, React will set the state with return value of this function
-    // This function only executed once on initial render and will ingored in subsequent re-renders
-    // We shouldnt call a function in useState and then it will call in every render, instead we should pass a function that React can call later
-    // We have to use JSON.parse since data stored as strings
-  });
 
   const { movies, isLoading, error } = useMoviesFetch(
     apiUrl,
     query,
     handleCloseMovie
   );
+
+  const [watched, setWatched] = useLocalStorageState([], "watchedMovies");
 
   function handleSelectMovie(id) {
     // id === selectetMovieId ? setSelectedMovieId(null) : setSelectedMovieId(id);
@@ -102,15 +96,6 @@ export default function App() {
       watchedMovies.filter((movie) => movie.imdbID !== id)
     );
   }
-
-  useEffect(
-    function () {
-      localStorage.setItem("watchedMovies", JSON.stringify(watched));
-      // We dont need to create new array as in eventHandler function because useEffect will execute once the watched state updated
-      // Using useEffect also synchronized with watch state and it will automatically update stored values when watched state updates.
-    },
-    [watched]
-  );
 
   // we use the useEffect hook to register an effect, which code that contains side effects (code which has connection with external from the component will lead infinite renders)
   // Side effects should not be in render logic, only inside eventHandles or in useEffects
