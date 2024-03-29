@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import { useMoviesFetch } from "./useMoviesFetch";
 
 /*
 const tempMovieData = [
@@ -60,12 +61,8 @@ const apiUrl = `http://www.omdbapi.com/?apikey=${KEY}`;
 // const queryParam2 = `2014`;
 
 export default function App() {
-  const [movies, setMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [selectetMovieId, setSelectedMovieId] = useState(null);
-
   // const [watched, setWatched] = useState([]);
   const [watched, setWatched] = useState(function () {
     const storedValue = localStorage.getItem("watchedMovies");
@@ -77,8 +74,11 @@ export default function App() {
     // We have to use JSON.parse since data stored as strings
   });
 
-  // console.log(isAlreadyExists);
-  // console.log(watched);
+  const { movies, isLoading, error } = useMoviesFetch(
+    apiUrl,
+    query,
+    handleCloseMovie
+  );
 
   function handleSelectMovie(id) {
     // id === selectetMovieId ? setSelectedMovieId(null) : setSelectedMovieId(id);
@@ -143,58 +143,6 @@ export default function App() {
   //     .then((res) => res.json())
   //     .then((data) => setMovies(data.Search));
   // }, []);
-
-  // Handled by Async function
-  useEffect(
-    function () {
-      // Browser API
-      const controller = new AbortController();
-
-      async function fetchMovies() {
-        try {
-          setIsLoading(true);
-          setError("");
-
-          const res = await fetch(`${apiUrl}&s=${query}`, {
-            signal: controller.signal,
-          });
-          if (!res.ok) throw new Error("Something went wrong");
-
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found");
-
-          setMovies(data.Search);
-          setError("");
-
-          // console.log(movies); stale state
-          // console.log(data);   invalid search query => Response: "False"
-          // setIsLoading(false);
-        } catch (err) {
-          // console.error(err.message);
-          if (err.name !== "AbortError") {
-            setError(err.message);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-
-      handleCloseMovie(); // To close if any open movie before search
-      fetchMovies();
-
-      // will execute for each key stroke, with each rerender, abort the request
-      return function () {
-        controller.abort();
-      };
-    },
-    [query]
-  );
 
   return (
     <>
